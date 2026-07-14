@@ -1,0 +1,209 @@
+openapi: 3.1.0
+info:
+  title: Traci Notion Career Assistant
+  version: 1.0.0
+  description: Read and update Traci Dougherty's shared Notion career databases.
+servers:
+  - url: https://api.notion.com
+paths:
+  /v1/search:
+    post:
+      operationId: searchNotion
+      summary: Search shared Notion pages and data sources by title
+      parameters:
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: "2026-03-11"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                page_size:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 50
+                start_cursor:
+                  type: string
+                filter:
+                  type: object
+                  additionalProperties: true
+                sort:
+                  type: object
+                  additionalProperties: true
+              required:
+                - query
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/data_sources/{data_source_id}/query:
+    post:
+      operationId: queryDataSource
+      summary: Query a shared Notion data source
+      parameters:
+        - in: path
+          name: data_source_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: "2026-03-11"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filter:
+                  type: object
+                  additionalProperties: true
+                sorts:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+                page_size:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 100
+                start_cursor:
+                  type: string
+              additionalProperties: true
+      responses:
+        "200":
+          description: Data source query results
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/pages/{page_id}:
+    get:
+      operationId: retrievePage
+      summary: Retrieve a Notion page and its properties
+      parameters:
+        - in: path
+          name: page_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: "2026-03-11"
+      responses:
+        "200":
+          description: Page object
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+    patch:
+      operationId: updatePage
+      summary: Update properties on an existing Notion page
+      parameters:
+        - in: path
+          name: page_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: "2026-03-11"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                properties:
+                  type: object
+                  additionalProperties: true
+                archived:
+                  type: boolean
+                in_trash:
+                  type: boolean
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated page
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/blocks/{block_id}/children:
+    get:
+      operationId: listBlockChildren
+      summary: Read the content blocks inside a Notion page
+      parameters:
+        - in: path
+          name: block_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: "2026-03-11"
+        - in: query
+          name: page_size
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+        - in: query
+          name: start_cursor
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Block children
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    notionBearer:
+      type: http
+      scheme: bearer
+security:
+  - notionBearer: []
