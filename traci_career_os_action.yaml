@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info:
+  title: Traci Career OS
+  version: 1.0.0
+  description: Read Traci Dougherty's live Notion Job Application Pipeline through Pipedream.
+servers:
+  - url: https://eos7gw9rkiv0412.m.pipedream.net
+paths:
+  /:
+    post:
+      operationId: reviewPipeline
+      summary: Retrieve Traci's live Job Application Pipeline from Notion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+              required:
+                - command
+              additionalProperties: false
+      responses:
+        "200":
+          description: Live Job Application Pipeline records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  applications:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                required:
+                  - success
+                  - count
+                  - applications
+                additionalProperties: true
