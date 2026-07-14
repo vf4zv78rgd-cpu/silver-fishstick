@@ -1,0 +1,275 @@
+openapi: 3.1.0
+info:
+  title: Traci Notion Career Assistant
+  version: 1.1.0
+servers:
+  - url: https://api.notion.com
+paths:
+  /v1/search:
+    post:
+      operationId: searchNotion
+      summary: Search shared Notion pages and databases
+      parameters:
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                page_size:
+                  type: integer
+                  default: 50
+              required: [query]
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+
+  /v1/data_sources/{data_source_id}/query:
+    post:
+      operationId: queryNotionDataSource
+      summary: Query a shared Notion data source
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filter:
+                  type: object
+                  additionalProperties: true
+                page_size:
+                  type: integer
+                  default: 100
+              additionalProperties: false
+      responses:
+        "200":
+          description: Query results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+
+  /v1/pages/{page_id}:
+    get:
+      operationId: retrieveNotionPage
+      summary: Retrieve a Notion page
+      parameters:
+        - name: page_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      responses:
+        "200":
+          description: Page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+    patch:
+      operationId: updateNotionCareerApplication
+      summary: Update supported Job Application Pipeline properties
+      parameters:
+        - name: page_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRequest"
+      responses:
+        "200":
+          description: Updated page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+
+  /v1/blocks/{block_id}/children:
+    get:
+      operationId: readNotionPageContent
+      summary: Read page content blocks
+      parameters:
+        - name: block_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      responses:
+        "200":
+          description: Block children
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+
+components:
+  schemas:
+    GenericResponse:
+      type: object
+      properties:
+        object:
+          type: string
+        id:
+          type: string
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        properties:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    NumberValue:
+      type: object
+      properties:
+        number:
+          type: number
+      required: [number]
+      additionalProperties: false
+
+    SelectValue:
+      type: object
+      properties:
+        select:
+          type: object
+          properties:
+            name:
+              type: string
+          required: [name]
+          additionalProperties: false
+      required: [select]
+      additionalProperties: false
+
+    RichTextValue:
+      type: object
+      properties:
+        rich_text:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [text]
+              text:
+                type: object
+                properties:
+                  content:
+                    type: string
+                required: [content]
+                additionalProperties: false
+            required: [type, text]
+            additionalProperties: false
+      required: [rich_text]
+      additionalProperties: false
+
+    DateValue:
+      type: object
+      properties:
+        date:
+          type: object
+          properties:
+            start:
+              type: string
+            end:
+              type:
+                - string
+                - "null"
+          required: [start]
+          additionalProperties: false
+      required: [date]
+      additionalProperties: false
+
+    UpdateProperties:
+      type: object
+      properties:
+        "Match Score":
+          $ref: "#/components/schemas/NumberValue"
+        "Resume Version":
+          $ref: "#/components/schemas/SelectValue"
+        "Resume Tailoring Notes":
+          $ref: "#/components/schemas/RichTextValue"
+        "Fit Notes":
+          $ref: "#/components/schemas/RichTextValue"
+        "Cover Letter Draft":
+          $ref: "#/components/schemas/RichTextValue"
+        "Cover Letter Status":
+          $ref: "#/components/schemas/SelectValue"
+        "Preparation Status":
+          $ref: "#/components/schemas/SelectValue"
+        "Status":
+          $ref: "#/components/schemas/SelectValue"
+        "Thank You Note Draft":
+          $ref: "#/components/schemas/RichTextValue"
+        "Application Notes":
+          $ref: "#/components/schemas/RichTextValue"
+        "Follow-up Date":
+          $ref: "#/components/schemas/DateValue"
+      minProperties: 1
+      additionalProperties: false
+
+    UpdateRequest:
+      type: object
+      properties:
+        properties:
+          $ref: "#/components/schemas/UpdateProperties"
+      required: [properties]
+      additionalProperties: false
+
+  securitySchemes:
+    notionBearer:
+      type: http
+      scheme: bearer
+security:
+  - notionBearer: []
