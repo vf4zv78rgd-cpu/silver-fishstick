@@ -1,0 +1,253 @@
+openapi: 3.1.0
+info:
+  title: Traci Notion Career Assistant
+  description: Search, read, and update the Notion pages shared with Traci's Executive Career Assistant connection.
+  version: 1.0.1
+
+servers:
+  - url: https://api.notion.com
+
+paths:
+  /v1/search:
+    post:
+      operationId: searchNotion
+      summary: Search shared Notion pages and databases
+      parameters:
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Successful Notion search
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericNotionResponse"
+
+  /v1/data_sources/{data_source_id}/query:
+    post:
+      operationId: queryNotionDataSource
+      summary: Query entries in a shared Notion data source
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryRequest"
+      responses:
+        "200":
+          description: Successful data source query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericNotionResponse"
+
+  /v1/pages/{page_id}:
+    get:
+      operationId: retrieveNotionPage
+      summary: Retrieve a Notion page and its properties
+      parameters:
+        - name: page_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      responses:
+        "200":
+          description: Successful page retrieval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericNotionResponse"
+
+    patch:
+      operationId: updateNotionPage
+      summary: Update properties on an existing Notion page
+      parameters:
+        - name: page_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePageRequest"
+      responses:
+        "200":
+          description: Successful page update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericNotionResponse"
+
+  /v1/blocks/{block_id}/children:
+    get:
+      operationId: readNotionPageContent
+      summary: Read content blocks inside a Notion page
+      parameters:
+        - name: block_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "2025-09-03"
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+        - name: start_cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful block retrieval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericNotionResponse"
+
+components:
+  schemas:
+    GenericNotionResponse:
+      type: object
+      properties:
+        object:
+          type: string
+        id:
+          type: string
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        properties:
+          type: object
+          additionalProperties: true
+        has_more:
+          type: boolean
+        next_cursor:
+          type:
+            - string
+            - "null"
+      additionalProperties: true
+
+    SearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+        page_size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+        start_cursor:
+          type: string
+        filter:
+          type: object
+          properties:
+            property:
+              type: string
+            value:
+              type: string
+          additionalProperties: true
+        sort:
+          type: object
+          properties:
+            direction:
+              type: string
+            timestamp:
+              type: string
+          additionalProperties: true
+      required:
+        - query
+      additionalProperties: false
+
+    QueryRequest:
+      type: object
+      properties:
+        filter:
+          type: object
+          additionalProperties: true
+        sorts:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        page_size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 100
+        start_cursor:
+          type: string
+      additionalProperties: false
+
+    UpdatePageRequest:
+      type: object
+      properties:
+        properties:
+          type: object
+          additionalProperties: true
+        archived:
+          type: boolean
+        in_trash:
+          type: boolean
+      required:
+        - properties
+      additionalProperties: false
+
+  securitySchemes:
+    notionBearer:
+      type: http
+      scheme: bearer
+
+security:
+  - notionBearer: []
